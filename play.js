@@ -17,6 +17,20 @@ let currentAudioInfo = null;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎵 初始化播放页面...');
     
+    // 检测移动设备并显示提示
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        const mobileTip = document.getElementById('mobileTip');
+        if (mobileTip) {
+            mobileTip.style.display = 'block';
+        }
+        
+        const fallbackPlayer = document.getElementById('fallbackPlayer');
+        if (fallbackPlayer) {
+            fallbackPlayer.style.display = 'block';
+        }
+    }
+    
     // 检测微信环境并显示提示
     detectWeChatEnvironment();
     
@@ -279,8 +293,43 @@ async function loadCloudAudio(cloudUrl) {
             }
         }
         
+        // 移动设备使用音频代理或Base64数据
+        let finalAudioUrl = cloudUrl;
+        if (isMobile) {
+            console.log('📱 移动设备，尝试获取Base64音频数据');
+            
+            try {
+                // 尝试获取Base64数据
+                const dataResponse = await fetch(`/api/audio-data?url=${encodeURIComponent(cloudUrl)}`);
+                if (dataResponse.ok) {
+                    const dataResult = await dataResponse.json();
+                    if (dataResult.code === 0) {
+                        finalAudioUrl = dataResult.data.dataUrl;
+                        console.log('✅ 使用Base64音频数据');
+                    } else {
+                        throw new Error(dataResult.message);
+                    }
+                } else {
+                    throw new Error('Base64数据获取失败');
+                }
+            } catch (dataError) {
+                console.warn('⚠️ Base64数据获取失败，使用代理:', dataError);
+                // 降级到代理
+                const proxyUrl = `/api/audio-proxy?url=${encodeURIComponent(cloudUrl)}`;
+                finalAudioUrl = proxyUrl;
+                console.log('🔗 使用代理URL:', proxyUrl);
+            }
+        }
+        
         // 设置音频源
-        audioPlayer.src = cloudUrl;
+        audioPlayer.src = finalAudioUrl;
+        
+        // 同时设置备用播放器（移动设备）
+        const fallbackAudio = document.getElementById('fallbackAudio');
+        if (fallbackAudio && isMobile) {
+            fallbackAudio.src = finalAudioUrl;
+            console.log('📱 备用播放器已设置');
+        }
         
         // 添加加载事件监听器
         audioPlayer.addEventListener('loadeddata', () => {
@@ -296,6 +345,12 @@ async function loadCloudAudio(cloudUrl) {
             // 移动设备显示播放提示
             if (isMobile) {
                 showMobilePlayHint();
+            }
+            
+            // 更新音频状态
+            const audioStatus = document.getElementById('audioStatus');
+            if (audioStatus) {
+                audioStatus.textContent = '音频加载完成，可以播放';
             }
         });
         

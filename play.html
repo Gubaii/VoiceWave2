@@ -3,100 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>声音播放 - 看见声音</title>
+    <title>播放 - 声纹可视化工具</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    <style>
+        .audio-fallback {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .audio-fallback audio {
+            width: 100%;
+            max-width: 400px;
+        }
+        .mobile-tip {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #1976d2;
+        }
+    </style>
 </head>
 <body class="play-page">
     <div class="play-container">
-        <header class="play-header">
-            <h1 class="play-title">看见声音</h1>
-            <p class="play-subtitle">专属于你的声纹作品</p>
-        </header>
+        <h1>声纹播放</h1>
         
-        <main class="play-content">
-            <!-- 声纹展示 -->
-            <div class="waveform-showcase">
-                <img id="waveformImage" class="waveform-image" alt="声纹图片" style="display: none;">
-            </div>
-            
-            <!-- 播放控制 -->
-            <div class="play-controls">
-                <button class="play-btn" id="playBtn" onclick="togglePlay()">
-                    <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                    </svg>
-                    <span id="playBtnText">播放</span>
-                </button>
-                
-                <div class="progress-container">
-                    <div class="time-display">
-                        <span id="currentTime">00:00</span>
-                        <span id="duration">00:00</span>
-                    </div>
-                    <div class="progress-bar" onclick="seekTo(event)">
-                        <div class="progress-fill" id="progressFill"></div>
-                        <div class="progress-handle" id="progressHandle"></div>
-                    </div>
-                </div>
-                
-            </div>
-            
-            <!-- 作品信息 -->
-            <div class="artwork-info">
-                <div class="info-item">
-                    <span class="info-label">创建时间</span>
-                    <span class="info-value" id="creationTime">刚刚</span>
-                </div>
-            </div>
-            
-            <!-- 分享功能 -->
-            <div class="share-section">
-                <h3 class="share-title">分享这个声纹作品</h3>
-                <div class="share-actions">
-                    
-                    <button class="share-btn" onclick="copyLink()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                        </svg>
-                        复制链接
-                    </button>
-                    
-                    <button class="share-btn" onclick="downloadAudio()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                        </svg>
-                        下载音频
-                    </button>
-                </div>
-            </div>
-        </main>
-        
-        <!-- 返回功能 -->
-        <div class="back-action">
-            <a href="index.html" class="back-link">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-                创建你的声纹作品
-            </a>
+        <!-- 移动设备提示 -->
+        <div id="mobileTip" class="mobile-tip" style="display: none;">
+            <strong>移动设备提示：</strong>如果音频无法播放，请尝试点击下方的备用播放器
         </div>
-    </div>
-    
-    <!-- 音频元素 -->
-    <audio id="audioPlayer" preload="metadata"></audio>
-    
-    <!-- 错误提示 -->
-    <div class="error-message" id="errorMessage" style="display: none;">
-        <div class="error-content">
-            <h3>音频加载失败</h3>
-            <p>这个声纹作品可能已经过期或不存在</p>
-            <a href="index.html" class="error-btn">创建新作品</a>
+        
+        <!-- 主要音频播放器 -->
+        <div class="audio-player-container">
+            <audio id="audioPlayer" controls preload="metadata">
+                您的浏览器不支持音频播放
+            </audio>
+        </div>
+        
+        <!-- 备用音频播放器（移动设备） -->
+        <div id="fallbackPlayer" class="audio-fallback" style="display: none;">
+            <h3>备用播放器</h3>
+            <audio id="fallbackAudio" controls>
+                您的浏览器不支持音频播放
+            </audio>
+        </div>
+        
+        <!-- 音频信息 -->
+        <div class="audio-info">
+            <p id="audioStatus">正在加载音频...</p>
+        </div>
+        
+        <!-- 控制按钮 -->
+        <div class="controls">
+            <button id="playBtn" onclick="togglePlay()">▶️ 播放</button>
+            <button onclick="copyLink()">📋 复制链接</button>
+            <button onclick="downloadAudio()">💾 下载</button>
+        </div>
+        
+        <!-- 进度条 -->
+        <div class="progress-container">
+            <div class="time-display">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+            <div id="progressContainer" class="progress-bar" onclick="seekTo(event)">
+                <div id="progressBar" class="progress"></div>
+            </div>
+        </div>
+        
+        <!-- 声纹显示区域 -->
+        <div class="waveform-display">
+            <canvas id="waveformCanvas" width="800" height="200"></canvas>
         </div>
     </div>
     
