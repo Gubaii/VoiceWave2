@@ -16,6 +16,37 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePlayPage(audioInfo);
 });
 
+// 开始播放
+function startPlayback() {
+    console.log('🎵 用户点击播放按钮');
+    
+    const playButton = document.getElementById('playButton');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const controlButtons = document.getElementById('controlButtons');
+    
+    if (!audioPlayer.src) {
+        console.error('❌ 没有音频源');
+        return;
+    }
+    
+    // 播放音频
+    audioPlayer.play().then(() => {
+        console.log('✅ 音频开始播放');
+        
+        // 更新播放按钮状态
+        playButton.classList.add('playing');
+        playButton.querySelector('.play-icon').textContent = '⏸️';
+        playButton.querySelector('.play-text').textContent = '播放中';
+        
+        // 显示控制按钮
+        controlButtons.style.display = 'flex';
+        
+    }).catch(error => {
+        console.error('❌ 播放失败:', error);
+        alert('播放失败，请重试');
+    });
+}
+
 // 初始化页面元素
 function initializeElements() {
     audioPlayer = document.getElementById('audioPlayer');
@@ -28,6 +59,13 @@ function initializeElements() {
     audioPlayer.addEventListener('loadeddata', onAudioLoaded);
     audioPlayer.addEventListener('error', onAudioError);
     audioPlayer.addEventListener('canplay', onAudioCanPlay);
+    
+    // 初始化播放按钮状态
+    const playButton = document.getElementById('playButton');
+    if (playButton) {
+        playButton.style.opacity = '0.6';
+        playButton.querySelector('.play-text').textContent = '加载中...';
+    }
 }
 
 // 从URL获取音频信息
@@ -181,8 +219,13 @@ function loadLocalAudio(fileId) {
 // 音频加载完成
 function onAudioLoaded() {
     console.log('✅ 音频加载完成');
-    updateStatus('音频加载完成，可以播放');
-    updateDisplayInfo(currentAudioInfo.title, currentAudioInfo.description);
+    
+    // 更新播放按钮状态，提示用户可以播放
+    const playButton = document.getElementById('playButton');
+    if (playButton) {
+        playButton.style.opacity = '1';
+        playButton.querySelector('.play-text').textContent = '点击播放';
+    }
 }
 
 // 音频可以播放
@@ -196,7 +239,7 @@ function onAudioError(event) {
     console.error('❌ 音频播放错误:', event);
     console.error('错误详情:', audioPlayer.error);
     
-    let errorMessage = '音频播放失败';
+    let errorMessage = '音频加载失败';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
     
@@ -208,7 +251,14 @@ function onAudioError(event) {
         errorMessage += '，可能是网络问题或音频格式不支持';
     }
     
-    showError(errorMessage);
+    // 在播放按钮上显示错误
+    const playButton = document.getElementById('playButton');
+    if (playButton) {
+        playButton.style.background = 'linear-gradient(135deg, #e53e3e, #c53030)';
+        playButton.querySelector('.play-icon').textContent = '❌';
+        playButton.querySelector('.play-text').textContent = errorMessage;
+        playButton.onclick = null; // 禁用点击
+    }
 }
 
 // 更新状态信息
