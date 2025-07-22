@@ -263,6 +263,34 @@
             content: '⏸️';
         }
         
+        .vpn-notice {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+        }
+        
+        .vpn-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .vpn-text {
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .vpn-text strong {
+            color: #664d03;
+            font-weight: 600;
+        }
+        
         @media (max-width: 480px) {
             .play-container {
                 padding: 30px 20px;
@@ -290,6 +318,14 @@
     <div class="play-container">
         <h1 class="play-title">🎵 声纹播放</h1>
         <p class="play-subtitle">聆听你的声音艺术</p>
+        
+        <div class="vpn-notice">
+            <div class="vpn-icon">🔒</div>
+            <div class="vpn-text">
+                <strong>访问提醒</strong><br>
+                请确保已开启VPN，以确保音频正常加载和播放
+            </div>
+        </div>
         
         <div class="play-button-container">
             <button id="playButton" class="big-play-button" onclick="startPlayback()">
