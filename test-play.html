@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>播放测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .audio-player {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+        }
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+        }
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #2196f3;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 播放功能测试</h1>
+    
+    <div class="test-section">
+        <h2>1. URL参数测试</h2>
+        <div id="urlInfo" class="status">
+            正在分析URL参数...
+        </div>
+        <button onclick="analyzeUrl()">重新分析URL</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 直接URL播放测试</h2>
+        <input type="text" id="directUrl" placeholder="输入音频URL进行测试">
+        <button onclick="testDirectUrl()">测试直接播放</button>
+        <audio id="directAudio" class="audio-player" controls>
+            您的浏览器不支持音频播放
+        </audio>
+        <div id="directStatus" class="status">等待测试...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 本地存储测试</h2>
+        <button onclick="testLocalStorage()">检查本地存储</button>
+        <div id="localStorageInfo" class="status">等待检查...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 模拟音频测试</h2>
+        <button onclick="testMockAudio()">生成测试音频</button>
+        <audio id="mockAudio" class="audio-player" controls>
+            您的浏览器不支持音频播放
+        </audio>
+        <div id="mockStatus" class="status">等待测试...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 浏览器兼容性测试</h2>
+        <div id="browserInfo" class="status">
+            正在检测浏览器信息...
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时自动运行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 开始播放功能测试');
+            analyzeUrl();
+            testBrowserInfo();
+        });
+
+        // 分析URL参数
+        function analyzeUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlInfo = document.getElementById('urlInfo');
+            
+            let info = '<strong>URL参数分析结果：</strong><br>';
+            let hasParams = false;
+            
+            for (let [key, value] of urlParams.entries()) {
+                info += `${key}: ${value}<br>`;
+                hasParams = true;
+            }
+            
+            if (!hasParams) {
+                info += '❌ 没有找到URL参数';
+                urlInfo.className = 'status error';
+            } else {
+                urlInfo.className = 'status success';
+            }
+            
+            urlInfo.innerHTML = info;
+            console.log('🔍 URL参数分析完成');
+        }
+
+        // 测试直接URL播放
+        function testDirectUrl() {
+            const url = document.getElementById('directUrl').value;
+            const audio = document.getElementById('directAudio');
+            const status = document.getElementById('directStatus');
+            
+            if (!url) {
+                status.innerHTML = '❌ 请输入音频URL';
+                status.className = 'status error';
+                return;
+            }
+            
+            status.innerHTML = '🔄 正在测试...';
+            status.className = 'status';
+            
+            audio.src = url;
+            
+            audio.addEventListener('loadeddata', () => {
+                status.innerHTML = '✅ 音频加载成功！';
+                status.className = 'status success';
+            });
+            
+            audio.addEventListener('error', (e) => {
+                status.innerHTML = `❌ 音频加载失败: ${audio.error ? audio.error.message : '未知错误'}`;
+                status.className = 'status error';
+            });
+        }
+
+        // 测试本地存储
+        function testLocalStorage() {
+            const info = document.getElementById('localStorageInfo');
+            let result = '<strong>本地存储检查结果：</strong><br>';
+            
+            const keys = ['recordedAudio', 'audioData', 'audioBlob'];
+            let foundData = false;
+            
+            for (const key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    result += `✅ ${key}: 找到数据 (${data.length} 字符)<br>`;
+                    foundData = true;
+                } else {
+                    result += `❌ ${key}: 无数据<br>`;
+                }
+            }
+            
+            if (foundData) {
+                info.className = 'status success';
+            } else {
+                info.className = 'status error';
+                result += '<br>⚠️ 没有找到任何音频数据';
+            }
+            
+            info.innerHTML = result;
+        }
+
+        // 测试模拟音频
+        function testMockAudio() {
+            const audio = document.getElementById('mockAudio');
+            const status = document.getElementById('mockStatus');
+            
+            status.innerHTML = '🔄 正在生成测试音频...';
+            status.className = 'status';
+            
+            // 创建一个简单的测试音频
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+            
+            // 创建音频Blob
+            const mediaRecorder = new MediaRecorder(new MediaStream());
+            const chunks = [];
+            
+            mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                audio.src = url;
+                
+                status.innerHTML = '✅ 测试音频生成成功！';
+                status.className = 'status success';
+            };
+            
+            // 如果MediaRecorder不可用，使用简单的data URL
+            try {
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), 100);
+            } catch (error) {
+                console.log('MediaRecorder不可用，使用备用方案');
+                // 使用一个简单的音频data URL
+                const simpleAudioData = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+                audio.src = simpleAudioData;
+                status.innerHTML = '✅ 测试音频生成成功（备用方案）！';
+                status.className = 'status success';
+            }
+        }
+
+        // 测试浏览器信息
+        function testBrowserInfo() {
+            const info = document.getElementById('browserInfo');
+            const userAgent = navigator.userAgent;
+            
+            let result = '<strong>浏览器兼容性信息：</strong><br>';
+            result += `User Agent: ${userAgent}<br><br>`;
+            
+            // 检查音频支持
+            const audio = new Audio();
+            result += `HTML5 Audio: ${!!audio ? '✅ 支持' : '❌ 不支持'}<br>`;
+            result += `AudioContext: ${!!(window.AudioContext || window.webkitAudioContext) ? '✅ 支持' : '❌ 不支持'}<br>`;
+            result += `MediaRecorder: ${!!window.MediaRecorder ? '✅ 支持' : '❌ 不支持'}<br>`;
+            
+            // 检查音频格式支持
+            const formats = ['audio/webm', 'audio/mp4', 'audio/wav', 'audio/ogg'];
+            result += '<br><strong>音频格式支持：</strong><br>';
+            formats.forEach(format => {
+                result += `${format}: ${audio.canPlayType(format) ? '✅ 支持' : '❌ 不支持'}<br>`;
+            });
+            
+            info.innerHTML = result;
+            info.className = 'status success';
+        }
+    </script>
+</body>
+</html> 

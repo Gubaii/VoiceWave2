@@ -55,7 +55,7 @@ function getAudioInfoFromUrl() {
 }
 
 // 初始化播放页面
-async function initializePlayPage(audioInfo) {
+function initializePlayPage(audioInfo) {
     try {
         currentAudioInfo = audioInfo;
         
@@ -64,7 +64,7 @@ async function initializePlayPage(audioInfo) {
             throw new Error('未找到音频信息，请检查链接是否正确');
         }
         
-        await loadAudioData(audioInfo);
+        loadAudioData(audioInfo);
         
     } catch (error) {
         console.error('❌ 初始化播放页面失败:', error);
@@ -73,28 +73,28 @@ async function initializePlayPage(audioInfo) {
 }
 
 // 加载音频数据
-async function loadAudioData(audioInfo) {
+function loadAudioData(audioInfo) {
     try {
         console.log('📡 加载音频数据...');
         
         // 优先级1: 云存储URL
         if (audioInfo.cloudUrl) {
             console.log('☁️ 从云存储加载音频...');
-            await loadCloudAudio(audioInfo.cloudUrl);
+            loadCloudAudio(audioInfo.cloudUrl);
             return;
         }
         
         // 优先级2: 本地存储ID (新版本)
         if (audioInfo.fileId) {
             console.log('💾 从本地存储加载音频 (fileId)...');
-            await loadLocalAudio(audioInfo.fileId);
+            loadLocalAudio(audioInfo.fileId);
             return;
         }
         
         // 优先级3: 本地存储ID (旧版本兼容)
         if (audioInfo.id) {
             console.log('💾 从本地存储加载音频 (id)...');
-            await loadLocalAudio(audioInfo.id);
+            loadLocalAudio(audioInfo.id);
             return;
         }
         
@@ -102,12 +102,12 @@ async function loadAudioData(audioInfo) {
         
     } catch (error) {
         console.error('❌ 加载音频数据失败:', error);
-        throw error;
+        showError('加载音频数据失败: ' + error.message);
     }
 }
 
 // 加载云端音频
-async function loadCloudAudio(cloudUrl) {
+function loadCloudAudio(cloudUrl) {
     try {
         console.log('☁️ 云存储URL:', cloudUrl);
         
@@ -125,12 +125,12 @@ async function loadCloudAudio(cloudUrl) {
         
     } catch (error) {
         console.error('❌ 加载云端音频失败:', error);
-        throw new Error('云端音频加载失败: ' + error.message);
+        showError('云端音频加载失败: ' + error.message);
     }
 }
 
 // 加载本地音频
-async function loadLocalAudio(fileId) {
+function loadLocalAudio(fileId) {
     try {
         console.log('💾 本地存储ID:', fileId);
         
@@ -174,7 +174,7 @@ async function loadLocalAudio(fileId) {
         
     } catch (error) {
         console.error('❌ 加载本地音频失败:', error);
-        throw new Error('本地音频加载失败: ' + error.message);
+        showError('本地音频加载失败: ' + error.message);
     }
 }
 
