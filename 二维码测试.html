@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .url-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 二维码测试</h1>
+            <p>测试编辑页面生成的二维码是否能正确工作</p>
+        </div>
+
+        <div class="test-section">
+            <h3>测试1: 模拟编辑页面二维码生成</h3>
+            <p>模拟编辑页面的二维码生成逻辑，生成一个指向播放页面的二维码</p>
+            
+            <button class="btn" onclick="generateTestQR1()">生成测试二维码1</button>
+            <button class="btn" onclick="generateTestQR2()">生成测试二维码2</button>
+            
+            <div id="testQR1" class="qr-container"></div>
+            <div id="testQR2" class="qr-container"></div>
+            
+            <div id="testResult1" class="result hidden"></div>
+            <div id="testResult2" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试2: 验证播放页面URL</h3>
+            <p>验证生成的播放页面URL是否能正确访问</p>
+            
+            <div id="urlDisplay" class="url-display hidden"></div>
+            <button class="btn" onclick="testPlayPage()">测试播放页面</button>
+            
+            <div id="playTestResult" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试3: 从localStorage读取数据</h3>
+            <p>检查localStorage中是否有正确的音频数据</p>
+            
+            <button class="btn" onclick="checkLocalStorage()">检查localStorage</button>
+            
+            <div id="storageResult" class="result hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟编辑页面的二维码生成逻辑
+        function generateTestQR1() {
+            const container = document.getElementById('testQR1');
+            container.innerHTML = '';
+            
+            // 模拟云存储音频URL
+            const cloudAudioUrl = 'https://mp-71407943-224d-4e7e-a1f9-e6e1b9bd6d81.cdn.bspapp.com/cloudstorage/voicewave_1703123456789.webm';
+            const simpleFileId = 'voicewave_1703123456789.webm';
+            
+            // 生成播放页面URL
+            const playUrl = generatePlayUrl(cloudAudioUrl, simpleFileId);
+            
+            // 生成二维码 - 使用低容错率
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(playUrl)}&ecc=L&margin=3`;
+            
+            const img = document.createElement('img');
+            img.src = qrUrl;
+            img.alt = '测试二维码1';
+            img.style.maxWidth = '200px';
+            img.style.height = 'auto';
+            
+            container.appendChild(img);
+            
+            // 显示URL
+            const result = document.getElementById('testResult1');
+            result.innerHTML = `
+                <strong>生成的播放页面URL:</strong><br>
+                <code>${playUrl}</code>
+            `;
+            result.className = 'result success';
+            result.classList.remove('hidden');
+            
+            // 保存URL用于测试
+            window.testPlayUrl1 = playUrl;
+        }
+
+        function generateTestQR2() {
+            const container = document.getElementById('testQR2');
+            container.innerHTML = '';
+            
+            // 模拟本地音频
+            const timestamp = Date.now();
+            const playUrl = `${window.location.origin}/play.html?id=${timestamp}&local=true`;
+            
+            // 生成二维码 - 使用低容错率
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(playUrl)}&ecc=L&margin=3`;
+            
+            const img = document.createElement('img');
+            img.src = qrUrl;
+            img.alt = '测试二维码2';
+            img.style.maxWidth = '200px';
+            img.style.height = 'auto';
+            
+            container.appendChild(img);
+            
+            // 显示URL
+            const result = document.getElementById('testResult2');
+            result.innerHTML = `
+                <strong>生成的播放页面URL:</strong><br>
+                <code>${playUrl}</code>
+            `;
+            result.className = 'result success';
+            result.classList.remove('hidden');
+            
+            // 保存URL用于测试
+            window.testPlayUrl2 = playUrl;
+        }
+
+        // 生成播放页面URL（模拟编辑页面的逻辑）
+        function generatePlayUrl(cloudAudioUrl, simpleFileId) {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            const port = window.location.port;
+            
+            let baseUrl;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                baseUrl = `${protocol}//${hostname}${port ? ':' + port : ''}`;
+            } else {
+                baseUrl = `${protocol}//${hostname}${port ? ':' + port : ''}`;
+            }
+            
+            const playUrl = new URL(`${baseUrl}/play.html`);
+            playUrl.searchParams.set('audioUrl', cloudAudioUrl);
+            if (simpleFileId) {
+                playUrl.searchParams.set('fileId', simpleFileId);
+            }
+            playUrl.searchParams.set('timestamp', Date.now());
+            
+            return playUrl.toString();
+        }
+
+        // 测试播放页面
+        function testPlayPage() {
+            const url = window.testPlayUrl1 || window.testPlayUrl2;
+            if (!url) {
+                showResult('playTestResult', '请先生成测试二维码', 'error');
+                return;
+            }
+            
+            const urlDisplay = document.getElementById('urlDisplay');
+            urlDisplay.textContent = url;
+            urlDisplay.classList.remove('hidden');
+            
+            // 尝试访问播放页面
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        showResult('playTestResult', '✅ 播放页面可以正常访问', 'success');
+                    } else {
+                        showResult('playTestResult', `❌ 播放页面访问失败: ${response.status}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showResult('playTestResult', `❌ 播放页面访问失败: ${error.message}`, 'error');
+                });
+        }
+
+        // 检查localStorage
+        function checkLocalStorage() {
+            const result = document.getElementById('storageResult');
+            const data = {};
+            
+            // 检查相关的localStorage项
+            const keys = [
+                'isCloudAudio',
+                'cloudAudioUrl', 
+                'simpleFileId',
+                'audioPlayUrl',
+                'recordingTimestamp',
+                'recordedAudio'
+            ];
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    data[key] = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                }
+            });
+            
+            if (Object.keys(data).length === 0) {
+                showResult('storageResult', '❌ localStorage中没有找到音频数据', 'error');
+            } else {
+                const dataStr = JSON.stringify(data, null, 2);
+                showResult('storageResult', `✅ 找到localStorage数据:\n<pre>${dataStr}</pre>`, 'success');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+            element.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html> 

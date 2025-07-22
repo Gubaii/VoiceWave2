@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑导出 - 看见声音</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="uni-cloud-storage.js"></script>
+    <script src="cloud-storage.js"></script>
+</head>
+<body class="edit-page">
+    <button class="back-btn" onclick="goBack()">← 返回</button>
+    
+    <div class="edit-container">
+        <h1 class="page-title">编辑导出</h1>
+        
+        <div class="edit-layout">
+            <!-- 左侧样式主题 -->
+            <div class="sidebar-left">
+                <h3 class="section-title">样式主题</h3>
+                <div class="theme-selector">
+                    <div class="theme-item selected" data-theme="equalizer">
+                        <div class="theme-preview equalizer-mini">
+                            <div class="bar" style="height: 60%"></div>
+                            <div class="bar" style="height: 40%"></div>
+                            <div class="bar" style="height: 80%"></div>
+                            <div class="bar" style="height: 30%"></div>
+                            <div class="bar" style="height: 70%"></div>
+                            <div class="bar" style="height: 50%"></div>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                    
+                    <div class="theme-item" data-theme="continuous">
+                        <div class="theme-preview continuous-mini">
+                            <svg viewBox="0 0 100 30" class="wave-svg-mini">
+                                <path d="M0,15 Q12.5,5 25,15 T50,15 T75,15 T100,15" stroke="#333" stroke-width="2" fill="none"/>
+                            </svg>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                    
+                    <div class="theme-item" data-theme="vertical">
+                        <div class="theme-preview vertical-mini">
+                            <div class="line" style="height: 70%"></div>
+                            <div class="line" style="height: 45%"></div>
+                            <div class="line" style="height: 85%"></div>
+                            <div class="line" style="height: 60%"></div>
+                            <div class="line" style="height: 90%"></div>
+                            <div class="line" style="height: 40%"></div>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                    
+                    <div class="theme-item" data-theme="heartbeat">
+                        <div class="theme-preview heartbeat-mini">
+                            <svg viewBox="0 0 100 30" class="wave-svg-mini">
+                                <path d="M0,15 L10,15 L12.5,5 L15,25 L17.5,10 L20,15 L30,15 L32.5,7 L35,23 L37.5,12 L40,15 L50,15 L52.5,6 L55,24 L57.5,11 L60,15 L70,15 L72.5,9 L75,21 L77.5,14 L80,15 L90,15 L92.5,7 L95,23 L97.5,12 L100,15" 
+                                      stroke="#333" stroke-width="2" fill="none"/>
+                            </svg>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                    
+                    <div class="theme-item" data-theme="audio">
+                        <div class="theme-preview audio-mini">
+                            <svg viewBox="0 0 100 30" class="wave-svg-mini">
+                                <path d="M0,15 Q5,10 10,15 Q15,20 20,15 Q25,7 30,15 Q35,22 40,15 Q45,5 50,15 Q55,25 60,15 Q65,10 70,15 Q75,20 80,15 Q85,12 90,15 Q95,17 100,15" 
+                                      stroke="#000" stroke-width="2" fill="rgba(0,0,0,0.1)"/>
+                            </svg>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                    
+                    <div class="theme-item" data-theme="dots">
+                        <div class="theme-preview dots-mini">
+                            <div class="dot-container-mini">
+                                <div class="dot-mini large"></div>
+                                <div class="dot-mini medium"></div>
+                                <div class="dot-mini large"></div>
+                                <div class="dot-mini small"></div>
+                                <div class="dot-mini xlarge"></div>
+                                <div class="dot-mini medium"></div>
+                            </div>
+                        </div>
+                        <p class="card-text">This is a special gift for you.</p>
+                        <div class="qr-mini"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 中间声纹预览 -->
+            <div class="main-content">
+                <div class="waveform-canvas-container">
+                    <canvas id="mainWaveform" width="600" height="200"></canvas>
+                </div>
+                <div class="content-overlay">
+                    <p class="custom-text" id="customText">This is a special gift for you.</p>
+                    <div class="qr-display" id="qrDisplay"></div>
+                </div>
+            </div>
+            
+            <!-- 右侧控制面板 -->
+            <div class="sidebar-right">
+                <!-- 文本编辑 -->
+                <div class="control-section">
+                    <h3 class="section-title">文本编辑</h3>
+                    <textarea id="textInput" class="text-input" placeholder="This is a special gift for you.">This is a special gift for you.</textarea>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showText" checked> 显示文字
+                    </label>
+                </div>
+                
+                <!-- 字体选择 -->
+                <div class="control-section">
+                    <h3 class="section-title">字体</h3>
+                    <select id="fontSelect" class="font-select">
+                        <option value="Inter">Inter</option>
+                        <option value="Noto Sans SC">思源黑体</option>
+                        <option value="Noto Serif SC">思源宋体</option>
+                        <option value="Ma Shan Zheng">马善政毛笔</option>
+                        <option value="ZCOOL XiaoWei">站酷小薇</option>
+                        <option value="ZCOOL QingKe HuangYou">站酷庆科黄油体</option>
+                        <option value="Zhi Mang Xing">致美行</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Courier">Courier</option>
+                    </select>
+                </div>
+            
+                
+                <!-- 导出功能 -->
+                <div class="control-section">
+                    <h3 class="section-title">导出作品</h3>
+                    <div class="export-actions">
+                        <button class="export-btn png-btn" onclick="exportPNG()">下载PNG</button>
+                        <!-- <button class="export-btn svg-btn" onclick="exportSVG()">下载SVG</button> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- 语音识别模态框 -->
+    <div class="modal" id="speechModal" style="display: none;">
+        <div class="modal-content">
+            <h3>语音识别结果</h3>
+            <div class="speech-result" id="speechResult">正在识别中...</div>
+            <div class="modal-actions">
+                <button class="secondary-btn" onclick="closeSpeechModal()">取消</button>
+                <button class="primary-btn" onclick="applySpeechResult()">应用</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="dcloud-config.js"></script>
+    <script src="qiniu-config.js"></script>
+    <script src="cloudinary-config.js"></script>
+    <script src="uni-cloud-storage.js"></script>
+    <script src="cloud-storage.js"></script>
+    <script src="edit.js"></script>
+</body>
+</html> 

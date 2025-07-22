@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>播放页面生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .result-section h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .url-display {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #qrCode {
+            max-width: 200px;
+            height: auto;
+        }
+        .copy-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #1e7e34;
+        }
+        .preview-section {
+            margin-top: 20px;
+        }
+        .preview-btn {
+            background: #17a2b8;
+        }
+        .preview-btn:hover {
+            background: #138496;
+        }
+        .hidden {
+            display: none;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 播放页面生成器</h1>
+            <p>生成可分享的音频播放页面和二维码</p>
+        </div>
+
+        <form id="playForm">
+            <div class="form-group">
+                <label for="audioUrl">音频文件URL：</label>
+                <input type="text" id="audioUrl" placeholder="请输入音频文件的完整URL地址" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">播放页面标题：</label>
+                <input type="text" id="title" placeholder="请输入播放页面标题" value="语音消息">
+            </div>
+
+            <div class="form-group">
+                <label for="description">描述信息：</label>
+                <textarea id="description" rows="3" placeholder="请输入音频描述信息（可选）"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="fileId">文件ID（可选）：</label>
+                <input type="text" id="fileId" placeholder="输入文件ID，用于删除等功能">
+            </div>
+
+            <button type="submit" class="btn">生成播放页面</button>
+            <button type="button" class="btn btn-secondary" onclick="loadFromLocalStorage()">从本地存储加载</button>
+        </form>
+
+        <div id="resultSection" class="result-section hidden">
+            <h3>🎉 生成成功！</h3>
+            
+            <div class="form-group">
+                <label>播放页面URL：</label>
+                <div class="url-display" id="playUrl"></div>
+                <button class="btn copy-btn" onclick="copyToClipboard('playUrl')">复制URL</button>
+            </div>
+
+            <div class="qr-container">
+                <h4>📱 分享二维码</h4>
+                <div id="qrCode"></div>
+                <button class="btn copy-btn" onclick="downloadQRCode()">下载二维码</button>
+            </div>
+
+            <div class="preview-section">
+                <h4>👀 预览播放页面</h4>
+                <button class="btn preview-btn" onclick="previewPlayPage()">在新窗口打开</button>
+            </div>
+
+            <div id="successMessage" class="success-message hidden">
+                已复制到剪贴板！
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // 页面加载时检查URL参数
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cloudUrl = urlParams.get('cloudUrl');
+            const fileId = urlParams.get('fileId');
+            const title = urlParams.get('title');
+            const description = urlParams.get('description');
+            
+            if (cloudUrl) {
+                document.getElementById('audioUrl').value = cloudUrl;
+            }
+            if (fileId) {
+                document.getElementById('fileId').value = fileId;
+            }
+            if (title) {
+                document.getElementById('title').value = title;
+            }
+            if (description) {
+                document.getElementById('description').value = description;
+            }
+            
+            // 如果有音频URL，自动生成
+            if (cloudUrl) {
+                generatePlayPage();
+            }
+        });
+
+        // 表单提交处理
+        document.getElementById('playForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generatePlayPage();
+        });
+
+        // 生成播放页面
+        function generatePlayPage() {
+            const audioUrl = document.getElementById('audioUrl').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const fileId = document.getElementById('fileId').value.trim();
+
+            if (!audioUrl) {
+                alert('请输入音频文件URL');
+                return;
+            }
+
+            // 生成播放页面URL
+            const playPageUrl = generatePlayPageUrl(audioUrl, title, description, fileId);
+            
+            // 显示结果
+            document.getElementById('playUrl').textContent = playPageUrl;
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            // 生成二维码
+            generateQRCode(playPageUrl);
+            
+            // 保存到本地存储
+            saveToLocalStorage(audioUrl, title, description, fileId, playPageUrl);
+        }
+
+        // 生成播放页面URL
+        function generatePlayPageUrl(audioUrl, title, description, fileId) {
+            const baseUrl = window.location.origin + window.location.pathname.replace('play-generator.html', 'play.html');
+            const url = new URL(baseUrl);
+            
+            url.searchParams.set('audioUrl', audioUrl);
+            if (title) url.searchParams.set('title', title);
+            if (description) url.searchParams.set('description', description);
+            if (fileId) url.searchParams.set('fileId', fileId);
+            url.searchParams.set('timestamp', Date.now());
+            
+            return url.toString();
+        }
+
+        // 生成二维码
+        function generateQRCode(url) {
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+            
+            // 使用在线API生成二维码作为备选方案
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&ecc=L&margin=3`;
+            
+            // 尝试使用QRCode库
+            if (typeof QRCode !== 'undefined') {
+                QRCode.toCanvas(qrContainer, url, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('QRCode库生成失败，使用在线API:', error);
+                        generateQRCodeWithAPI(qrCodeUrl);
+                    }
+                });
+            } else {
+                console.log('QRCode库未加载，使用在线API');
+                generateQRCodeWithAPI(qrCodeUrl);
+            }
+        }
+        
+        // 使用在线API生成二维码
+        function generateQRCodeWithAPI(qrCodeUrl) {
+            const qrContainer = document.getElementById('qrCode');
+            const img = document.createElement('img');
+            // 使用和二维码2一样的参数：ecc=L&margin=3
+            const lowEccUrl = qrCodeUrl + '&ecc=L&margin=3';
+            img.src = lowEccUrl;
+            img.alt = '二维码';
+            img.style.maxWidth = '200px';
+            img.style.height = 'auto';
+            qrContainer.appendChild(img);
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showSuccessMessage();
+                }).catch(function(err) {
+                    console.error('复制失败:', err);
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        // 备用复制方法
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showSuccessMessage();
+            } catch (err) {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // 显示成功消息
+        function showSuccessMessage() {
+            const message = document.getElementById('successMessage');
+            message.classList.remove('hidden');
+            setTimeout(() => {
+                message.classList.add('hidden');
+            }, 2000);
+        }
+
+        // 下载二维码
+        function downloadQRCode() {
+            const canvas = document.querySelector('#qrCode canvas');
+            const img = document.querySelector('#qrCode img');
+            
+            if (canvas) {
+                // 下载canvas生成的二维码
+                const link = document.createElement('a');
+                link.download = 'audio-qr-code.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } else if (img) {
+                // 下载在线API生成的二维码
+                const link = document.createElement('a');
+                link.download = 'audio-qr-code.png';
+                link.href = img.src;
+                link.click();
+            } else {
+                alert('没有找到二维码，请先生成播放页面');
+            }
+        }
+
+        // 预览播放页面
+        function previewPlayPage() {
+            const playUrl = document.getElementById('playUrl').textContent;
+            window.open(playUrl, '_blank');
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage(audioUrl, title, description, fileId, playUrl) {
+            const playPageData = {
+                audioUrl,
+                title,
+                description,
+                fileId,
+                playUrl,
+                timestamp: Date.now()
+            };
+            
+            // 保存最近生成的播放页面
+            const recentPages = JSON.parse(localStorage.getItem('recentPlayPages') || '[]');
+            recentPages.unshift(playPageData);
+            
+            // 只保留最近10个
+            if (recentPages.length > 10) {
+                recentPages.splice(10);
+            }
+            
+            localStorage.setItem('recentPlayPages', JSON.stringify(recentPages));
+        }
+
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            const recentPages = JSON.parse(localStorage.getItem('recentPlayPages') || '[]');
+            
+            if (recentPages.length === 0) {
+                alert('没有找到历史记录');
+                return;
+            }
+            
+            // 显示选择对话框
+            const latest = recentPages[0];
+            if (confirm(`是否加载最近的播放页面？\n标题: ${latest.title}\nURL: ${latest.audioUrl}`)) {
+                document.getElementById('audioUrl').value = latest.audioUrl;
+                document.getElementById('title').value = latest.title;
+                document.getElementById('description').value = latest.description || '';
+                document.getElementById('fileId').value = latest.fileId || '';
+                generatePlayPage();
+            }
+        }
+    </script>
+</body>
+</html> 

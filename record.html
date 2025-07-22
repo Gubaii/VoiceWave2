@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录音 - 声纹可视化工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="recording-page">
+        <div class="recording-container">
+        <div class="header">
+                <h1 class="page-title">声纹可视化工具</h1>
+            <p>请录制您的声音（最长10秒）</p>
+        </div>
+        
+        <div class="recording-area">
+                <!-- 麦克风选择区域 -->
+                <div class="microphone-selector">
+                    <label for="microphoneSelect" class="microphone-label">选择麦克风：</label>
+                    <select id="microphoneSelect" class="microphone-select" onchange="changeMicrophone()">
+                        <option value="">正在获取麦克风列表...</option>
+                    </select>
+                    <button id="refreshMicrophones" class="refresh-btn" onclick="refreshMicrophoneList()">
+                        🔄 刷新
+                    </button>
+                </div>
+                
+            <div class="recording-controls">
+                    <button id="recordBtn" class="record-btn" onclick="toggleRecording()">
+                    <span class="icon">🎤</span>
+                        <span id="recordBtnText" class="text">开始录音</span>
+                </button>
+                    <div id="timer" class="timer">00:10</div>
+                </div>
+                
+                <div class="recording-status">
+                    <p id="recordingHint" class="recording-hint">最多10秒</p>
+            </div>
+            
+            <div id="waveformContainer" class="waveform-container">
+                <canvas id="waveformCanvas" width="800" height="200"></canvas>
+            </div>
+            
+            <div id="audioPlayerContainer" class="audio-player" style="display: none;">
+                <audio id="audioPlayer" controls></audio>
+            </div>
+                
+                <div id="recordingActions" class="recording-actions" style="display: none;">
+                    <button id="retryBtn" class="secondary-btn" onclick="resetRecording()">重新录制</button>
+                    <button id="playRecordingBtn" class="secondary-btn" onclick="playRecording()" style="display: none;">播放录音</button>
+                    <button id="nextBtn" class="primary-btn" onclick="finishRecording()">下一步</button>
+                </div>
+            
+            <div id="uploadStatus" class="upload-status" style="display: none;">
+                <p id="uploadText">正在上传...</p>
+                <div class="progress-bar">
+                    <div id="uploadProgress" class="progress"></div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>正在处理...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="dcloud-config.js"></script>
+    <script src="uni-cloud-storage.js"></script>
+    <script src="cloud-storage.js"></script>
+    <script src="record.js"></script>
+</body>
+</html> 

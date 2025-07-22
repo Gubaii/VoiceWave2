@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>看见声音 - 声纹可视化工具</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1 class="main-title">看见声音</h1>
+            <p class="subtitle">将你的声音转换为精美的可视化声纹图，记录珍贵的声音瞬间</p>
+        </header>
+
+        <main class="styles-gallery">
+            <h2 class="gallery-title">挑选一种喜欢的样式开始吧！</h2>
+            <div class="styles-grid">
+                <!-- 样式1: 均衡器风格 -->
+                <div class="style-card" data-style="equalizer" onclick="selectStyle('equalizer')">
+                    <div class="waveform-preview equalizer-style">
+                        <div class="bar" style="height: 60%"></div>
+                        <div class="bar" style="height: 40%"></div>
+                        <div class="bar" style="height: 80%"></div>
+                        <div class="bar" style="height: 30%"></div>
+                        <div class="bar" style="height: 70%"></div>
+                        <div class="bar" style="height: 50%"></div>
+                        <div class="bar" style="height: 90%"></div>
+                        <div class="bar" style="height: 45%"></div>
+                        <div class="bar" style="height: 65%"></div>
+                        <div class="bar" style="height: 35%"></div>
+                        <div class="bar" style="height: 75%"></div>
+                        <div class="bar" style="height: 55%"></div>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+
+                <!-- 样式2: 连续波纹 -->
+                <div class="style-card" data-style="continuous" onclick="selectStyle('continuous')">
+                    <div class="waveform-preview continuous-style">
+                        <svg viewBox="0 0 200 60" class="wave-svg">
+                            <path d="M0,30 Q25,10 50,30 T100,30 T150,30 T200,30" stroke="#333" stroke-width="2" fill="none"/>
+                            <path d="M0,30 Q25,50 50,30 T100,30 T150,30 T200,30" stroke="#666" stroke-width="1.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+
+                <!-- 样式3: 简约竖纹 -->
+                <div class="style-card" data-style="vertical" onclick="selectStyle('vertical')">
+                    <div class="waveform-preview vertical-style">
+                        <div class="line" style="height: 70%"></div>
+                        <div class="line" style="height: 45%"></div>
+                        <div class="line" style="height: 85%"></div>
+                        <div class="line" style="height: 60%"></div>
+                        <div class="line" style="height: 90%"></div>
+                        <div class="line" style="height: 40%"></div>
+                        <div class="line" style="height: 75%"></div>
+                        <div class="line" style="height: 55%"></div>
+                        <div class="line" style="height: 80%"></div>
+                        <div class="line" style="height: 35%"></div>
+                        <div class="line" style="height: 65%"></div>
+                        <div class="line" style="height: 50%"></div>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+
+                <!-- 样式4: 心电图风格 -->
+                <div class="style-card" data-style="heartbeat" onclick="selectStyle('heartbeat')">
+                    <div class="waveform-preview heartbeat-style">
+                        <svg viewBox="0 0 200 60" class="wave-svg">
+                            <path d="M0,30 L20,30 L25,10 L30,50 L35,20 L40,30 L60,30 L65,15 L70,45 L75,25 L80,30 L100,30 L105,12 L110,48 L115,22 L120,30 L140,30 L145,18 L150,42 L155,28 L160,30 L180,30 L185,14 L190,46 L195,24 L200,30" 
+                                  stroke="#333" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+
+                <!-- 样式5: 音频波形 -->
+                <div class="style-card" data-style="audio" onclick="selectStyle('audio')">
+                    <div class="waveform-preview audio-style">
+                        <svg viewBox="0 0 200 60" class="wave-svg">
+                            <path d="M0,30 Q10,20 20,30 Q30,40 40,30 Q50,15 60,30 Q70,45 80,30 Q90,10 100,30 Q110,50 120,30 Q130,20 140,30 Q150,40 160,30 Q170,25 180,30 Q190,35 200,30" 
+                                  stroke="#000" stroke-width="3" fill="rgba(0,0,0,0.1)"/>
+                        </svg>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+
+                <!-- 样式6: 点线图案 -->
+                <div class="style-card" data-style="dots" onclick="selectStyle('dots')">
+                    <div class="waveform-preview dots-style">
+                        <div class="dot-container">
+                            <div class="dot large"></div>
+                            <div class="dot medium"></div>
+                            <div class="dot large"></div>
+                            <div class="dot small"></div>
+                            <div class="dot xlarge"></div>
+                            <div class="dot medium"></div>
+                            <div class="dot large"></div>
+                            <div class="dot small"></div>
+                            <div class="dot medium"></div>
+                            <div class="dot large"></div>
+                            <div class="dot small"></div>
+                            <div class="dot medium"></div>
+                        </div>
+                    </div>
+                    <p class="card-text">This is a special gift for you.</p>
+                    <div class="qr-placeholder"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
