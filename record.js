@@ -121,8 +121,16 @@ function initializeRecordingPage() {
     // 初始化语音识别
     initializeSpeechRecognition();
     
-        // 检查麦克风权限状态
+        // 检查麦克风权限状态（但不主动请求）
         checkMicrophonePermission();
+        
+        // 绑定麦克风相关事件
+        if (refreshMicrophonesBtn) {
+            refreshMicrophonesBtn.addEventListener('click', refreshMicrophoneList);
+        }
+        if (microphoneSelect) {
+            microphoneSelect.addEventListener('change', changeMicrophone);
+        }
         
         console.log('录音页面初始化完成');
         
@@ -249,6 +257,20 @@ async function checkMicrophonePermission() {
         console.error('检查麦克风权限失败:', error);
         // 如果权限API不支持，回退到传统方式
         showNotification('点击录音按钮时将会请求麦克风权限', 'info');
+    }
+}
+
+// 请求麦克风权限
+async function requestMicrophonePermission() {
+    try {
+        console.log('请求麦克风权限...');
+        await getMicrophoneStream();
+        permissionGranted = true;
+        console.log('麦克风权限获取成功');
+    } catch (error) {
+        console.error('麦克风权限请求失败:', error);
+        permissionGranted = false;
+        throw error;
     }
 }
 
@@ -994,6 +1016,9 @@ function performSpeechRecognition() {
 // 初始化麦克风列表
 async function initializeMicrophoneList() {
     try {
+        // 先添加一个默认选项
+        microphoneSelect.innerHTML = '<option value="">正在获取麦克风列表...</option>';
+        
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioInputs = devices.filter(device => device.kind === 'audioinput');
         
@@ -1003,7 +1028,7 @@ async function initializeMicrophoneList() {
         microphoneSelect.innerHTML = '';
         
         if (audioInputs.length === 0) {
-            microphoneSelect.innerHTML = '<option value="">未找到麦克风设备</option>';
+            microphoneSelect.innerHTML = '<option value="">点击录音按钮获取麦克风权限</option>';
             return;
         }
         
@@ -1019,12 +1044,12 @@ async function initializeMicrophoneList() {
         if (audioInputs.length > 0) {
             microphoneSelect.value = audioInputs[0].deviceId;
             console.log('已选择默认麦克风:', audioInputs[0].label || '麦克风 1');
-    }
+        }
     
     } catch (error) {
         console.error('获取麦克风列表失败:', error);
-        microphoneSelect.innerHTML = '<option value="">获取麦克风列表失败</option>';
-        showNotification('获取麦克风列表失败，请检查权限设置', 'warning');
+        microphoneSelect.innerHTML = '<option value="">点击录音按钮获取麦克风权限</option>';
+        showNotification('麦克风列表将在获取权限后显示', 'info');
     }
 }
 
