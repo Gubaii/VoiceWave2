@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initializeElements();
     const audioInfo = getAudioInfoFromUrl();
+    console.log('🔍 获取到的音频信息:', audioInfo);
     initializePlayPage(audioInfo);
 });
 
@@ -33,15 +34,23 @@ function initializeElements() {
 function getAudioInfoFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     
+    // 调试：打印所有URL参数
+    console.log('🔍 所有URL参数:');
+    for (let [key, value] of urlParams.entries()) {
+        console.log(`  ${key}: ${value}`);
+    }
+    
     const audioInfo = {
         cloudUrl: urlParams.get('cloudUrl'),
         fileId: urlParams.get('fileId'),
+        id: urlParams.get('id'), // 兼容旧版本
         isCloud: urlParams.get('cloud') === 'true',
+        local: urlParams.get('local') === 'true',
         title: urlParams.get('title') || '声纹作品',
         description: urlParams.get('description') || ''
     };
     
-    console.log('📡 从URL获取音频信息:', audioInfo);
+    console.log('📡 解析后的音频信息:', audioInfo);
     return audioInfo;
 }
 
@@ -50,8 +59,9 @@ async function initializePlayPage(audioInfo) {
     try {
         currentAudioInfo = audioInfo;
         
-        if (!audioInfo.cloudUrl && !audioInfo.fileId) {
-            throw new Error('未找到音频信息');
+        // 检查是否有任何音频信息
+        if (!audioInfo.cloudUrl && !audioInfo.fileId && !audioInfo.id) {
+            throw new Error('未找到音频信息，请检查链接是否正确');
         }
         
         await loadAudioData(audioInfo);
@@ -74,10 +84,17 @@ async function loadAudioData(audioInfo) {
             return;
         }
         
-        // 优先级2: 本地存储ID
+        // 优先级2: 本地存储ID (新版本)
         if (audioInfo.fileId) {
-            console.log('💾 从本地存储加载音频...');
+            console.log('💾 从本地存储加载音频 (fileId)...');
             await loadLocalAudio(audioInfo.fileId);
+            return;
+        }
+        
+        // 优先级3: 本地存储ID (旧版本兼容)
+        if (audioInfo.id) {
+            console.log('💾 从本地存储加载音频 (id)...');
+            await loadLocalAudio(audioInfo.id);
             return;
         }
         
@@ -117,18 +134,37 @@ async function loadLocalAudio(fileId) {
     try {
         console.log('💾 本地存储ID:', fileId);
         
-        const storedData = localStorage.getItem(`audio_${fileId}`);
+        // 尝试多种存储键名
+        let storedData = localStorage.getItem(`audio_${fileId}`);
         if (!storedData) {
-            throw new Error('本地音频数据不存在');
+            // 尝试旧版本的存储键名
+            storedData = localStorage.getItem('recordedAudio');
         }
         
-        const audioData = JSON.parse(storedData);
-        if (!audioData.audioBlob) {
+        if (!storedData) {
+            throw new Error('本地音频数据不存在，可能已过期');
+        }
+        
+        let audioData;
+        try {
+            audioData = JSON.parse(storedData);
+        } catch (parseError) {
+            // 如果不是JSON，可能是直接的Blob数据
+            console.log('📦 检测到直接的Blob数据');
+            const blob = new Blob([storedData], { type: 'audio/webm' });
+            const blobUrl = URL.createObjectURL(blob);
+            audioPlayer.src = blobUrl;
+            updateStatus('正在加载本地音频...');
+            return;
+        }
+        
+        if (!audioData.audioBlob && !audioData.data) {
             throw new Error('音频数据格式错误');
         }
         
         // 创建Blob URL
-        const blob = new Blob([audioData.audioBlob], { type: audioData.type || 'audio/webm' });
+        const audioBlob = audioData.audioBlob || audioData.data;
+        const blob = new Blob([audioBlob], { type: audioData.type || 'audio/webm' });
         const blobUrl = URL.createObjectURL(blob);
         
         audioPlayer.src = blobUrl;

@@ -6,105 +6,176 @@
     <title>声纹播放</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .play-page {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            color: #333;
         }
         
         .play-container {
-            background: white;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             max-width: 500px;
             width: 100%;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .play-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
         
         .play-title {
-            font-size: 28px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
         }
         
         .play-subtitle {
             color: #666;
+            font-size: 16px;
             margin-bottom: 30px;
+            font-weight: 400;
         }
         
         .audio-player {
             width: 100%;
             margin: 20px 0;
-            border-radius: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         
         .status-message {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
             margin: 20px 0;
             color: #666;
+            font-weight: 500;
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .status-message::before {
+            content: '🎵';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+        
+        .status-message:not(.error-message):not(.success-message) {
+            padding-left: 50px;
         }
         
         .control-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 30px 0;
             flex-wrap: wrap;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
         .btn-primary:hover {
-            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
         }
         
         .btn-secondary {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             color: #333;
-            border: 1px solid #dee2e6;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
         .btn-secondary:hover {
-            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
         }
         
         .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, #fee, #fcc);
+            color: #c53030;
+            border: 1px solid #fed7d7;
+            font-weight: 600;
         }
         
         .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+            color: #2f855a;
+            border: 1px solid #c6f6d5;
+            font-weight: 600;
         }
         
         .loading {
@@ -115,15 +186,55 @@
             border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-right: 10px;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .waveform-placeholder {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            border: 2px dashed #dee2e6;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .waveform-placeholder::before {
+            content: '🎵';
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .play-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .play-title {
+                font-size: 28px;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
-<body class="play-page">
+<body>
     <div class="play-container">
         <h1 class="play-title">🎵 声纹播放</h1>
         <p class="play-subtitle">聆听你的声音艺术</p>
@@ -136,10 +247,20 @@
             您的浏览器不支持音频播放
         </audio>
         
+        <div class="waveform-placeholder">
+            声纹可视化区域
+        </div>
+        
         <div class="control-buttons">
-            <button class="btn btn-primary" onclick="copyLink()">📋 复制链接</button>
-            <button class="btn btn-secondary" onclick="downloadAudio()">💾 下载</button>
-            <a href="index.html" class="btn btn-secondary">🏠 返回首页</a>
+            <button class="btn btn-primary" onclick="copyLink()">
+                📋 复制链接
+            </button>
+            <button class="btn btn-secondary" onclick="downloadAudio()">
+                💾 下载
+            </button>
+            <a href="index.html" class="btn btn-secondary">
+                🏠 返回首页
+            </a>
         </div>
     </div>
     
