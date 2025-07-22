@@ -17,10 +17,43 @@ let currentAudioInfo = null;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎵 初始化播放页面...');
     
+    // 检测微信环境并显示提示
+    detectWeChatEnvironment();
+    
     initializeElements();
     const audioInfo = getAudioInfoFromUrl();
     initializePlayPage(audioInfo);
 });
+
+// 检测微信环境
+function detectWeChatEnvironment() {
+    const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+    if (isWeChat) {
+        console.log('📱 检测到微信环境');
+        
+        // 显示微信提示
+        const wechatTip = document.createElement('div');
+        wechatTip.className = 'wechat-tip';
+        wechatTip.innerHTML = `
+            <div style="
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 12px;
+                margin: 10px 0;
+                font-size: 14px;
+                color: #856404;
+                text-align: center;
+            ">
+                <strong>微信提示：</strong>如果音频无法播放，请点击右上角菜单选择"在浏览器中打开"
+            </div>
+        `;
+        
+        // 插入到页面顶部
+        const container = document.querySelector('.play-container') || document.body;
+        container.insertBefore(wechatTip, container.firstChild);
+    }
+}
 
 // 获取页面元素
 function initializeElements() {
@@ -178,7 +211,20 @@ async function loadCloudAudio(cloudUrl) {
     try {
         console.log('☁️ 云存储URL:', cloudUrl);
         
+        // 检测是否在微信环境
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        console.log('📱 是否微信环境:', isWeChat);
+        
+        // 确保URL是HTTPS
+        if (cloudUrl && !cloudUrl.startsWith('https://')) {
+            cloudUrl = cloudUrl.replace('http://', 'https://');
+            console.log('🔒 强制使用HTTPS:', cloudUrl);
+        }
+        
+        // 设置音频源
         audioPlayer.src = cloudUrl;
+        
+        // 添加加载事件监听器
         audioPlayer.addEventListener('loadeddata', () => {
             console.log('✅ 云存储音频加载完成');
             
@@ -190,9 +236,31 @@ async function loadCloudAudio(cloudUrl) {
             generateMockWaveform();
         });
         
+        // 添加错误处理
         audioPlayer.addEventListener('error', (e) => {
             console.error('❌ 音频播放错误:', e);
-            showError('无法播放云端音频，可能是网络问题');
+            console.error('错误详情:', audioPlayer.error);
+            
+            let errorMessage = '无法播放云端音频';
+            if (isWeChat) {
+                errorMessage += '，微信浏览器可能不支持此音频格式，请尝试在浏览器中打开';
+            } else {
+                errorMessage += '，可能是网络问题或音频格式不支持';
+            }
+            
+            showError(errorMessage);
+        });
+        
+        // 添加加载超时处理
+        const loadTimeout = setTimeout(() => {
+            if (audioPlayer.readyState < 2) { // HAVE_CURRENT_DATA
+                console.warn('⚠️ 音频加载超时');
+                showError('音频加载超时，请检查网络连接');
+            }
+        }, 10000); // 10秒超时
+        
+        audioPlayer.addEventListener('loadeddata', () => {
+            clearTimeout(loadTimeout);
         });
         
         // 立即更新页面标题

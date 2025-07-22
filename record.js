@@ -359,51 +359,71 @@ async function toggleRecording() {
     }
 }
 
-// 开始录音
-async function startRecording() {
-    try {
-        // 检查是否已经有麦克风流
-        if (!audioStream || !permissionGranted) {
-            console.log('需要请求麦克风权限');
-            showNotification('正在请求麦克风权限...', 'info');
-            
-            // 请求麦克风权限（这里会显示权限弹窗）
-            await requestMicrophonePermission();
-            
-            // 如果权限获取失败，直接返回
-            if (!audioStream) {
-                return;
+    // 开始录音
+    async function startRecording() {
+        try {
+            // 检查是否已经有麦克风流
+            if (!audioStream || !permissionGranted) {
+                console.log('需要请求麦克风权限');
+                showNotification('正在请求麦克风权限...', 'info');
+                
+                // 请求麦克风权限（这里会显示权限弹窗）
+                await requestMicrophonePermission();
+                
+                // 如果权限获取失败，直接返回
+                if (!audioStream) {
+                    return;
+                }
             }
-        }
-        
-        // 确保音频上下文处于运行状态
-        if (audioContext && audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
-        // 重置录音状态
-        audioChunks = [];
-        remainingTime = 10;
-        isRecording = true;
-        
-        // 更新UI
-        if (recordBtn) {
-            recordBtn.classList.add('recording');
-        }
-        if (recordBtnText) {
-            recordBtnText.textContent = '停止录音';
-        }
-        if (recordingHint) {
-            recordingHint.textContent = '正在录音...';
-        }
-        
-        // 隐藏录音操作按钮
-        if (recordingActions) {
-            recordingActions.style.display = 'none';
-        }
-        
-        // 开始录音
-        mediaRecorder = new MediaRecorder(audioStream);
+            
+            // 确保音频上下文处于运行状态
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            
+            // 重置录音状态
+            audioChunks = [];
+            remainingTime = 10;
+            isRecording = true;
+            
+            // 更新UI
+            if (recordBtn) {
+                recordBtn.classList.add('recording');
+            }
+            if (recordBtnText) {
+                recordBtnText.textContent = '停止录音';
+            }
+            if (recordingHint) {
+                recordingHint.textContent = '正在录音...';
+            }
+            
+            // 隐藏录音操作按钮
+            if (recordingActions) {
+                recordingActions.style.display = 'none';
+            }
+            
+            // 设置录音选项 - 优先使用微信兼容的格式
+            const options = {
+                mimeType: 'audio/webm;codecs=opus', // 优先使用WebM格式
+                audioBitsPerSecond: 128000
+            };
+            
+            // 如果WebM不支持，尝试其他格式
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                console.log('⚠️ WebM格式不支持，尝试其他格式');
+                if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    options.mimeType = 'audio/mp4';
+                } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+                    options.mimeType = 'audio/wav';
+                } else {
+                    options.mimeType = 'audio/webm';
+                }
+            }
+            
+            console.log('📝 使用音频格式:', options.mimeType);
+            
+            // 开始录音
+            mediaRecorder = new MediaRecorder(audioStream, options);
         
         mediaRecorder.ondataavailable = function(event) {
             if (event.data.size > 0) {

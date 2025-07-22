@@ -41,6 +41,12 @@ export default async function handler(req, res) {
             fileDataLength: fileData ? fileData.length : 0
         });
         
+        // 检查音频格式兼容性
+        const supportedFormats = ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a'];
+        if (!supportedFormats.includes(fileType)) {
+            console.warn('⚠️ 音频格式可能不兼容:', fileType);
+        }
+        
         // 调用DCloud云函数
         const cloudFunctionUrl = 'https://fc-mp-71407943-224d-4e7e-a1f9-e6e1b9bd6d81.next.bspapp.com/uploadAudio';
         
