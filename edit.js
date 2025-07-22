@@ -701,10 +701,9 @@ function generateAudioPlayUrl() {
     const simpleFileId = localStorage.getItem('simpleFileId');
     
     if (isCloudAudio && cloudAudioUrl) {
-        // 使用短ID，不包含云端URL，保持二维码简洁
-        const shortId = simpleFileId || `cloud_${Date.now()}`;
-        const playUrl = `${window.location.origin}/play.html?id=${shortId}&cloud=true`;
-        console.log('生成云端音频播放URL（短ID）:', playUrl);
+        // 使用云端URL，确保播放页面能正确识别
+        const playUrl = `${window.location.origin}/play.html?cloudUrl=${encodeURIComponent(cloudAudioUrl)}&cloud=true`;
+        console.log('生成云端音频播放URL:', playUrl);
         return playUrl;
     } else {
         // 降级到本地音频
