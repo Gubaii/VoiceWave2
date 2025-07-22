@@ -55,6 +55,44 @@ function detectWeChatEnvironment() {
     }
 }
 
+// 显示移动设备播放提示
+function showMobilePlayHint() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+    
+    if (isMobile && !document.querySelector('.mobile-play-hint')) {
+        console.log('📱 显示移动设备播放提示');
+        
+        const mobileTip = document.createElement('div');
+        mobileTip.className = 'mobile-play-hint';
+        mobileTip.innerHTML = `
+            <div style="
+                background: #d4edda;
+                border: 1px solid #c3e6cb;
+                border-radius: 8px;
+                padding: 12px;
+                margin: 10px 0;
+                font-size: 14px;
+                color: #155724;
+                text-align: center;
+            ">
+                <strong>播放提示：</strong>${isSafari ? 'Safari浏览器需要点击播放按钮才能播放音频' : '移动设备请点击播放按钮开始播放'}
+            </div>
+        `;
+        
+        // 插入到页面顶部
+        const container = document.querySelector('.play-container') || document.body;
+        container.insertBefore(mobileTip, container.firstChild);
+        
+        // 3秒后自动隐藏
+        setTimeout(() => {
+            if (mobileTip.parentNode) {
+                mobileTip.parentNode.removeChild(mobileTip);
+            }
+        }, 5000);
+    }
+}
+
 // 获取页面元素
 function initializeElements() {
     audioPlayer = document.getElementById('audioPlayer');
@@ -211,14 +249,34 @@ async function loadCloudAudio(cloudUrl) {
     try {
         console.log('☁️ 云存储URL:', cloudUrl);
         
-        // 检测是否在微信环境
+        // 检测移动设备环境
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-        console.log('📱 是否微信环境:', isWeChat);
+        const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+        
+        console.log('📱 设备检测:', { isMobile, isWeChat, isSafari });
         
         // 确保URL是HTTPS
         if (cloudUrl && !cloudUrl.startsWith('https://')) {
             cloudUrl = cloudUrl.replace('http://', 'https://');
             console.log('🔒 强制使用HTTPS:', cloudUrl);
+        }
+        
+        // 移动设备特殊处理
+        if (isMobile) {
+            console.log('📱 移动设备，使用特殊加载策略');
+            
+            // 先尝试预加载音频
+            try {
+                const response = await fetch(cloudUrl, { method: 'HEAD' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                console.log('✅ 音频URL可访问');
+            } catch (fetchError) {
+                console.error('❌ 音频URL无法访问:', fetchError);
+                throw new Error('音频文件无法访问，请检查网络连接');
+            }
         }
         
         // 设置音频源
@@ -234,6 +292,11 @@ async function loadCloudAudio(cloudUrl) {
             
             updateDisplayInfo(title, description);
             generateMockWaveform();
+            
+            // 移动设备显示播放提示
+            if (isMobile) {
+                showMobilePlayHint();
+            }
         });
         
         // 添加错误处理
@@ -243,7 +306,11 @@ async function loadCloudAudio(cloudUrl) {
             
             let errorMessage = '无法播放云端音频';
             if (isWeChat) {
-                errorMessage += '，微信浏览器可能不支持此音频格式，请尝试在浏览器中打开';
+                errorMessage += '，微信浏览器限制较多，请点击右上角菜单选择"在浏览器中打开"';
+            } else if (isSafari) {
+                errorMessage += '，Safari可能需要用户交互才能播放，请点击播放按钮';
+            } else if (isMobile) {
+                errorMessage += '，移动设备可能需要点击播放按钮才能播放';
             } else {
                 errorMessage += '，可能是网络问题或音频格式不支持';
             }
@@ -257,7 +324,7 @@ async function loadCloudAudio(cloudUrl) {
                 console.warn('⚠️ 音频加载超时');
                 showError('音频加载超时，请检查网络连接');
             }
-        }, 10000); // 10秒超时
+        }, 15000); // 15秒超时
         
         audioPlayer.addEventListener('loadeddata', () => {
             clearTimeout(loadTimeout);
@@ -462,12 +529,40 @@ function setupAudioControls() {
 function togglePlay() {
     if (!audioPlayer) return;
     
+    // 检测移动设备
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+    
     if (isPlaying) {
         audioPlayer.pause();
     } else {
+        // 移动设备特殊处理
+        if (isMobile) {
+            console.log('📱 移动设备播放请求');
+            
+            // 确保音频已加载
+            if (audioPlayer.readyState < 2) {
+                console.log('⚠️ 音频未完全加载，等待加载完成');
+                showNotification('音频正在加载，请稍后重试', 'info');
+                return;
+            }
+            
+            // Safari特殊处理
+            if (isSafari) {
+                console.log('🍎 Safari浏览器播放');
+                // Safari需要用户交互，这里已经满足了条件
+            }
+        }
+        
         audioPlayer.play().catch(error => {
             console.error('播放失败:', error);
-            showError('音频播放失败');
+            
+            let errorMessage = '音频播放失败';
+            if (isMobile) {
+                errorMessage += '，移动设备可能需要用户交互才能播放';
+            }
+            
+            showError(errorMessage);
         });
     }
 }
