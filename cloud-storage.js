@@ -1,4 +1,6 @@
 // 云存储管理器
+// 防止重复声明
+if (typeof CloudStorageManager === 'undefined') {
 class CloudStorageManager {
     constructor(config) {
         this.config = config;
@@ -285,4 +287,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 导出到全局
 window.CloudStorageManager = CloudStorageManager;
-window.uploadAudioToCloud = uploadAudioToCloud; 
+window.uploadAudioToCloud = uploadAudioToCloud;
+} 

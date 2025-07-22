@@ -3,6 +3,8 @@
  * 只通过调用云函数的方式实现文件上传 - 禁止模拟上传
  */
 
+// 防止重复声明
+if (typeof UniCloudStorage === 'undefined') {
 class UniCloudStorage {
     constructor(spaceId, clientSecret) {
         this.spaceId = spaceId || (window.DCLOUD_CONFIG && window.DCLOUD_CONFIG.spaceId);
@@ -337,4 +339,5 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = UniCloudStorage;
 }
 
-console.log('🚀 DCloud云函数存储SDK已加载 (仅支持真实DCloud云函数上传)'); 
+console.log('🚀 DCloud云函数存储SDK已加载 (仅支持真实DCloud云函数上传)');
+} 
