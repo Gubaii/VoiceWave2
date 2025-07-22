@@ -80,17 +80,17 @@ async function loadAudioData(audioInfo) {
             return;
         }
         
-        // 优先级2: 云端短ID（从localStorage获取云端URL）
-        if (audioInfo.isCloud && audioInfo.id) {
-            console.log('☁️ 从云端短ID加载音频...');
-            await loadCloudAudioFromShortId(audioInfo.id);
-            return;
-        }
-        
-        // 优先级3: 云存储URL
+        // 优先级2: 云存储URL（直接从URL参数获取）
         if (audioInfo.cloudUrl) {
             console.log('☁️ 从云存储加载音频...');
             await loadCloudAudio(audioInfo.cloudUrl);
+            return;
+        }
+        
+        // 优先级3: 云端短ID（从localStorage获取云端URL）
+        if (audioInfo.isCloud && audioInfo.id) {
+            console.log('☁️ 从云端短ID加载音频...');
+            await loadCloudAudioFromShortId(audioInfo.id);
             return;
         }
         

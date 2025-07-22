@@ -844,8 +844,9 @@ function finishRecording() {
     function generatePlayUrl(cloudFileUrl, simpleFileId) {
         const baseUrl = window.location.origin + window.location.pathname.replace('record.html', 'play.html');
         const url = new URL(baseUrl);
-        url.searchParams.set('audioUrl', cloudFileUrl);
+        url.searchParams.set('cloudUrl', cloudFileUrl);  // 改为cloudUrl以匹配play.js
         url.searchParams.set('fileId', simpleFileId);
+        url.searchParams.set('cloud', 'true');  // 添加云端标识
         url.searchParams.set('timestamp', Date.now());
         return url.toString();
     }
