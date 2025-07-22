@@ -194,22 +194,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        .waveform-placeholder {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-            padding: 40px 20px;
-            margin: 20px 0;
-            border: 2px dashed #dee2e6;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .waveform-placeholder::before {
-            content: '🎵';
-            font-size: 48px;
-            display: block;
-            margin-bottom: 10px;
-        }
+
         
         @media (max-width: 480px) {
             .play-container {
@@ -247,9 +232,7 @@
             您的浏览器不支持音频播放
         </audio>
         
-        <div class="waveform-placeholder">
-            声纹可视化区域
-        </div>
+
         
         <div class="control-buttons">
             <button class="btn btn-primary" onclick="copyLink()">
