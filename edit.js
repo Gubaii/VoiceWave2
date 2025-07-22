@@ -19,85 +19,151 @@ let qrDisplay = null;
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    initializeEditPage();
+    console.log('🎨 编辑页面DOM加载完成');
+    try {
+        initializeEditPage();
+    } catch (error) {
+        console.error('❌ 编辑页面初始化失败:', error);
+        showError('页面初始化失败: ' + error.message);
+    }
 });
 
 // 初始化编辑页面
 function initializeEditPage() {
-    console.log('编辑页面已加载');
+    console.log('🎨 开始初始化编辑页面');
     
-    // 获取页面元素
-    mainCanvas = document.getElementById('mainWaveform');
-    textInput = document.getElementById('textInput');
-    customText = document.getElementById('customText');
-    fontSelect = document.getElementById('fontSelect');
-    showTextCheckbox = document.getElementById('showText');
-    qrDisplay = document.getElementById('qrDisplay');
-    
-    // 初始化画布
-    if (mainCanvas) {
+    try {
+        // 获取页面元素
+        mainCanvas = document.getElementById('mainWaveform');
+        textInput = document.getElementById('textInput');
+        customText = document.getElementById('customText');
+        fontSelect = document.getElementById('fontSelect');
+        showTextCheckbox = document.getElementById('showText');
+        qrDisplay = document.getElementById('qrDisplay');
+        
+        console.log('📋 页面元素获取结果:', {
+            mainCanvas: !!mainCanvas,
+            textInput: !!textInput,
+            customText: !!customText,
+            fontSelect: !!fontSelect,
+            showTextCheckbox: !!showTextCheckbox,
+            qrDisplay: !!qrDisplay
+        });
+        
+        // 检查必要元素是否存在
+        if (!mainCanvas) {
+            throw new Error('找不到主画布元素 (mainWaveform)');
+        }
+        
+        // 初始化画布
         mainCtx = mainCanvas.getContext('2d');
+        if (!mainCtx) {
+            throw new Error('无法获取画布上下文');
+        }
+        
+        console.log('✅ 画布初始化成功');
+        
+        // 检查录音数据
+        loadRecordedAudio();
+        
+        // 从本地存储获取选择的样式
+        const selectedStyle = localStorage.getItem('selectedStyle');
+        if (selectedStyle) {
+            currentTheme = selectedStyle;
+            updateThemeSelection();
+        }
+        
+        // 绑定事件监听器
+        bindEventListeners();
+        
+        // 初始化语音识别
+        initializeSpeechRecognition();
+        
+        // 生成初始声纹图
+        generateWaveform();
+        
+        // 生成二维码
+        generateQRCode();
+        
+        // 加载识别的文字（如果有的话）
+        loadRecognizedText();
+        
+        console.log('✅ 编辑页面初始化完成');
+        
+    } catch (error) {
+        console.error('❌ 编辑页面初始化过程中出错:', error);
+        throw error;
     }
-    
-    // 检查录音数据
-    loadRecordedAudio();
-    
-    // 从本地存储获取选择的样式
-    const selectedStyle = localStorage.getItem('selectedStyle');
-    if (selectedStyle) {
-        currentTheme = selectedStyle;
-        updateThemeSelection();
-    }
-    
-    // 绑定事件监听器
-    bindEventListeners();
-    
-    // 初始化语音识别
-    initializeSpeechRecognition();
-    
-    // 生成初始声纹图
-    generateWaveform();
-    
-    // 生成二维码
-    generateQRCode();
-    
-    // 加载识别的文字（如果有的话）
-    loadRecognizedText();
 }
 
 // 加载录音数据
 function loadRecordedAudio() {
-    const audioData = localStorage.getItem('recordedAudio');
-    if (audioData) {
-        // 将base64数据转换为Blob
-        fetch(audioData)
-            .then(res => res.blob())
-            .then(blob => {
-                return blob.arrayBuffer();
-            })
-            .then(buffer => {
-                // 解码音频数据
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                return audioContext.decodeAudioData(buffer);
-            })
-            .then(decodedBuffer => {
-                audioBuffer = decodedBuffer;
-                extractWaveformData();
-                generateWaveform();
-                
-                // 尝试语音识别
+    try {
+        console.log('🎵 开始加载录音数据...');
+        
+        // 尝试多种方式获取音频数据
+        let audioData = localStorage.getItem('recordedAudio');
+        
+        if (!audioData) {
+            // 尝试从其他可能的键名获取
+            const possibleKeys = ['audioData', 'recordedAudioBlob', 'audioBlob'];
+            for (const key of possibleKeys) {
+                audioData = localStorage.getItem(key);
                 if (audioData) {
-                    performSpeechRecognition(audioData);
+                    console.log(`✅ 从 ${key} 获取到音频数据`);
+                    break;
                 }
-            })
-            .catch(error => {
-                console.error('音频数据加载失败:', error);
-                // 使用模拟数据
-                generateMockWaveformData();
-                generateWaveform();
-            });
-    } else {
-        console.warn('未找到录音数据，使用模拟数据');
+            }
+        }
+        
+        if (audioData) {
+            console.log('📦 找到音频数据，开始处理...');
+            
+            // 将base64数据转换为Blob
+            fetch(audioData)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                    }
+                    return res.blob();
+                })
+                .then(blob => {
+                    console.log('✅ 音频Blob创建成功，大小:', blob.size);
+                    return blob.arrayBuffer();
+                })
+                .then(buffer => {
+                    console.log('✅ 音频ArrayBuffer创建成功，大小:', buffer.byteLength);
+                    // 解码音频数据
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    return audioContext.decodeAudioData(buffer);
+                })
+                .then(decodedBuffer => {
+                    console.log('✅ 音频解码成功');
+                    audioBuffer = decodedBuffer;
+                    extractWaveformData();
+                    generateWaveform();
+                    
+                    // 尝试语音识别
+                    if (audioData) {
+                        performSpeechRecognition(audioData);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ 音频数据加载失败:', error);
+                    showError('音频数据加载失败，使用模拟数据');
+                    // 使用模拟数据
+                    generateMockWaveformData();
+                    generateWaveform();
+                });
+        } else {
+            console.warn('⚠️ 未找到录音数据，使用模拟数据');
+            generateMockWaveformData();
+            generateWaveform();
+        }
+    } catch (error) {
+        console.error('❌ 加载录音数据时出错:', error);
+        showError('加载录音数据失败: ' + error.message);
+        // 使用模拟数据
         generateMockWaveformData();
         generateWaveform();
     }
@@ -1228,6 +1294,39 @@ function goBack() {
 }
 
 // 显示通知
+// 显示错误信息
+function showError(message) {
+    console.error('❌ 错误:', message);
+    
+    // 创建错误提示元素
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f87171;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1000;
+        font-weight: bold;
+        max-width: 80%;
+        text-align: center;
+    `;
+    errorDiv.textContent = message;
+    
+    document.body.appendChild(errorDiv);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+        }
+    }, 5000);
+}
+
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
