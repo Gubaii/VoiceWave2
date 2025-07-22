@@ -734,6 +734,17 @@ function finishRecording() {
     
     // 直接调用云函数上传
     async function uploadToCloudDirectly(audioBlob, filename) {
+        // 临时禁用云存储，避免CORS问题
+        console.log('⚠️ 云存储暂时禁用，使用本地存储模式');
+        return {
+            success: true,
+            isCloudUpload: false,
+            localUrl: URL.createObjectURL(audioBlob),
+            playUrl: generateLocalPlayUrl(filename),
+            error: '云存储暂时不可用',
+            fallback: true
+        };
+        
         try {
             console.log('正在处理音频文件...');
             
@@ -750,12 +761,15 @@ function finishRecording() {
             
             console.log('处理参数:', uploadParams);
             
-            // 调用云函数
+            // 调用云函数 - 添加CORS兼容性
             const response = await fetch('https://fc-mp-71407943-224d-4e7e-a1f9-e6e1b9bd6d81.next.bspapp.com/uploadAudio', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                mode: 'cors',
+                credentials: 'omit',
                 body: JSON.stringify(uploadParams)
             });
             
@@ -787,6 +801,7 @@ function finishRecording() {
             
         } catch (error) {
             console.error('云存储处理失败:', error);
+            console.log('⚠️ 降级到本地存储模式');
             
             // 降级到本地存储
             return {
@@ -794,7 +809,8 @@ function finishRecording() {
                 isCloudUpload: false,
                 localUrl: URL.createObjectURL(audioBlob),
                 playUrl: generateLocalPlayUrl(filename),
-                error: error.message
+                error: error.message,
+                fallback: true
             };
         }
     }
