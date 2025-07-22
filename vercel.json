@@ -21,10 +21,5 @@
       "destination": "/$1"
     }
   ],
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "@vercel/node"
-    }
-  },
   "trailingSlash": false
 } 
