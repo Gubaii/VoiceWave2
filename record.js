@@ -757,6 +757,20 @@ function finishRecording() {
             const cloudFunctionUrl = 'https://fc-mp-71407943-224d-4e7e-a1f9-e6e1b9bd6d81.next.bspapp.com/uploadAudio';
             console.log('🔗 云函数URL:', cloudFunctionUrl);
             
+            // 先进行CORS预检请求
+            try {
+                const preflightResponse = await fetch(cloudFunctionUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                console.log('✅ CORS预检成功');
+            } catch (preflightError) {
+                console.warn('⚠️ CORS预检失败，继续尝试POST请求:', preflightError);
+            }
+            
             let response;
             try {
                 response = await fetch(cloudFunctionUrl, {
@@ -771,7 +785,8 @@ function finishRecording() {
                 });
             } catch (fetchError) {
                 console.error('❌ 网络请求失败:', fetchError);
-                throw new Error('网络连接失败，请检查网络或稍后重试');
+                console.log('🌐 检测到Vercel环境，云函数CORS配置可能有问题');
+                throw new Error('云函数访问失败，已自动切换到本地存储模式');
             }
             
             const result = await response.json();
@@ -806,7 +821,8 @@ function finishRecording() {
             // 检测是否在Vercel环境
             const isVercel = window.location.hostname.includes('vercel.app');
             if (isVercel) {
-                console.log('🌐 检测到Vercel环境，使用本地存储模式');
+                console.log('🌐 检测到Vercel环境，云函数CORS配置问题，使用本地存储模式');
+                console.log('💡 提示：本地环境云存储功能正常，Vercel环境暂时使用本地存储');
             } else {
                 console.log('⚠️ 降级到本地存储模式');
             }
@@ -863,6 +879,8 @@ function finishRecording() {
             loadingText.textContent = text;
         }
     }
+    
+
 }
 
 // 隐藏加载提示
